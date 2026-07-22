@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación 5G NR - Massive MIMO & Beamforming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full bg-slate-800 rounded-xl shadow-2xl p-6 border border-slate-700">
+        
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-emerald-400">Simulador de Red 5G NR: Massive MIMO & Beamforming</h1>
+            <p class="text-sm text-slate-400">Demostración de direccionamiento de señal mediante <span class="text-amber-400 font-semibold">3GPP TS 38.211</span> en una ciudad de 25.000 hab.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Controles -->
+            <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/50 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-200 mb-4 border-b border-slate-700 pb-2">Configuración 5G</h2>
+                    
+                    <div class="mb-6">
+                        <label for="userSlider" class="block text-sm font-medium text-slate-300 mb-1">
+                            Dispositivos Conectados:
+                        </label>
+                        <input type="range" id="userSlider" min="1" max="12" step="1" value="3" 
+                               class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>1 UE</span>
+                            <span id="userValue" class="font-bold text-emerald-400 text-sm">3 UEs</span>
+                            <span>12 UEs</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="p-2.5 bg-slate-800 rounded border border-slate-700">
+                            <span class="block text-slate-400">Banda de Frecuencia:</span>
+                            <span class="text-sm font-bold text-blue-400">n78 (3.5 GHz - Sub-6)</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-800 rounded border border-slate-700">
+                            <span class="block text-slate-400">Técnica de Multiplexación:</span>
+                            <span class="text-sm font-bold text-amber-300">OFDMA + 256-QAM</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-800 rounded border border-slate-700">
+                            <span class="block text-slate-400">Estado del Beamforming:</span>
+                            <span id="beamStatus" class="text-sm font-bold text-emerald-400">Haces Activos Dirigidos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-700/50 text-xs space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        <span class="text-slate-300">gNodeB (Antena 64T64R)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block"></span>
+                        <span class="text-slate-300">Haz Enfocado (Beam 5G)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas -->
+            <div class="md:col-span-2 flex items-center justify-center bg-slate-950 rounded-lg border border-slate-800 p-2 relative">
+                <canvas id="simCanvas" width="500" height="400" class="w-full h-auto max-w-[500px] rounded"></canvas>
+            </div>
+        </div>
+
+        <footer class="mt-6 bg-slate-900/40 p-4 rounded-lg border border-slate-700/30 text-xs text-slate-300">
+            <h3 class="font-bold text-slate-200 mb-1">Diseño:</h3>
+            <p>
+                El diseño de la simulación se realiza de acuerdo con los cálculos generados para la actividad Red móvil por Ana Rocío León y ayuda para generación del HTML 5.0 con la herramienta de IA Gemini.
+            </p>
+
+            <h3 class="font-bold text-slate-200 mb-1">Fundamento Técnico 5G:</h3>
+            <p>
+                A diferencia de 3G/4G donde la antena radiaba potencia de forma omnidireccional o en sectores fijos de 120°, en **5G NR** la estación base (**gNodeB**) utiliza arreglos de fase (**Massive MIMO**) para concentrar la energía de radiofrecuencia en **haces estrechos dirigidos (*Beams*)** exclusivamente hacia la posición de cada usuario activo, minimizando la interferencia y maximizando la velocidad de transferencia.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('userSlider');
+        const userValueDisplay = document.getElementById('userValue');
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Posiciones fijas de los dispositivos en la celda
+        const availableUEs = [
+            { x: 380, y: 120 }, { x: 120, y: 100 }, { x: 420, y: 280 },
+            { x: 100, y: 300 }, { x: 250, y: 70  }, { x: 250, y: 340 },
+            { x: 340, y: 200 }, { x: 150, y: 220 }, { x: 290, y: 110 },
+            { x: 180, y: 290 }, { x: 400, y: 190 }, { x: 110, y: 180 }
+        ];
+
+        function drawSimulation() {
+            const count = parseInt(slider.value);
+            userValueDisplay.textContent = `${count} UE${count > 1 ? 's' : ''}`;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Rejilla de fondo
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 25) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 25) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Área de celda teórica
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 190, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Dibujar Haces (Beams) hacia los UEs activos
+            for (let i = 0; i < count; i++) {
+                const ue = availableUEs[i];
+                const angle = Math.atan2(ue.y - centerY, ue.x - centerX);
+
+                // Dibujar el lóbulo principal del haz (Beam)
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, Math.hypot(ue.x - centerX, ue.y - centerY), angle - 0.15, angle + 0.15);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+
+                // Dibujar el UE
+                ctx.beginPath();
+                ctx.arc(ue.x, ue.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Dibujar gNodeB en el centro
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#10b981';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        slider.addEventListener('input', drawSimulation);
+        drawSimulation();
+    </script>
+</body>
+</html>
