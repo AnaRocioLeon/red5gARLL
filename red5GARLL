@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificación y Ubicación de Antenas 5G HetNet - Ciudad Inteligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        canvas { touch-action: none; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Top Header -->
+    <header class="border-b border-slate-800 bg-slate-900/90 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+                <i class="fa-solid fa-tower-cell text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    Mapa de Distribución y Planificación de Antenas 5G NR
+                    <span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono">HetNet 3GPP SA</span>
+                </h1>
+                <p class="text-xs text-slate-400">Ciudad Inteligente (25.000 Habitantes) • Cobertura Paraguas (Sub-6GHz) y Capacidad Densa (mmWave)</p>
+				<p class="text-rose-400 font-bold">Diseñada por Ana Rocío León con ayuda de la IA Gemini, usando como base el mapa de la ciudad de Lillehammer, Noruega</p>
+           </div>
+        </div>
+
+        <!-- Quick Stats Badge -->
+        <div class="flex items-center gap-4 text-xs font-mono">
+            <div class="bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                <span class="text-slate-400">Macroceldas Sub-6GHz:</span>
+                <span class="text-rose-400 font-bold">5 Sitios</span>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-400">Small Cells mmWave:</span>
+                <span class="text-emerald-400 font-bold">12 Nodos</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1920px] mx-auto w-full">
+
+        <!-- Controls Sidebar -->
+        <aside class="lg:col-span-3 space-y-4 flex flex-col justify-between">
+            <div class="glass-panel rounded-2xl p-4 space-y-5">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Capas de Red y Controles
+                </h2>
+
+                <!-- Layer Toggles -->
+                <div class="space-y-3">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Capas Visibles</label>
+                    
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 hover:border-rose-500/50 transition-all cursor-pointer" onclick="toggleLayer('macro')">
+                        <div class="flex items-center gap-3">
+                            <span class="w-4 h-4 rounded-full bg-rose-500/30 border border-rose-500 flex items-center justify-center">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                            </span>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">Macroceldas Sub-6GHz</div>
+                                <div class="text-[10px] text-slate-400">Banda n28 (700 MHz) / n78 (3.5 GHz)</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="chkMacro" checked class="accent-rose-500 w-4 h-4 rounded cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer" onclick="toggleLayer('small')">
+                        <div class="flex items-center gap-3">
+                            <span class="w-4 h-4 rounded-full bg-emerald-500/30 border border-emerald-500 flex items-center justify-center">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            </span>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">Small Cells mmWave</div>
+                                <div class="text-[10px] text-slate-400">Banda n257 (28 GHz) Centro Urbano</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="chkSmall" checked class="accent-emerald-500 w-4 h-4 rounded cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 hover:border-cyan-500/50 transition-all cursor-pointer" onclick="toggleLayer('beams')">
+                        <div class="flex items-center gap-3">
+                            <span class="w-4 h-4 rounded-full bg-cyan-500/30 border border-cyan-500 flex items-center justify-center">
+                                <i class="fa-solid fa-wifi text-[9px] text-cyan-400"></i>
+                            </span>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">Haces Beamforming</div>
+                                <div class="text-[10px] text-slate-400">Massive MIMO Directivo Atendido</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="chkBeams" checked class="accent-cyan-500 w-4 h-4 rounded cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all cursor-pointer" onclick="toggleLayer('iot')">
+                        <div class="flex items-center gap-3">
+                            <span class="w-4 h-4 rounded-full bg-amber-500/30 border border-amber-500 flex items-center justify-center">
+                                <i class="fa-solid fa-car text-[9px] text-amber-400"></i>
+                            </span>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">Dispositivos y Vehículos</div>
+                                <div class="text-[10px] text-slate-400">Smart Grid, IoT, V2X, Usuarios</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="chkIot" checked class="accent-amber-500 w-4 h-4 rounded cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Slice Selection Filter -->
+                <div class="space-y-2 pt-2 border-t border-slate-800">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Filtro de Network Slicing</label>
+                    <select id="sliceFilter" onchange="updateFilter()" class="w-full bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl p-2.5 focus:border-emerald-500 outline-none">
+                        <option value="all">Ver Todos los Slices (eMBB + URLLC + mMTC)</option>
+                        <option value="embb">eMBB - Banda Ancha Móvil Residencial y Video 8K</option>
+                        <option value="urllc">URLLC - Vehículos Autónomos y Semáforos (&lt; 1 ms)</option>
+                        <option value="mmtc">mMTC - Sensores Urbanos e IoT Masivo</option>
+                    </select>
+                </div>
+
+                <!-- Simulation Speed -->
+                <div class="space-y-2 pt-2 border-t border-slate-800">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400 font-semibold uppercase tracking-wider">Densidad de Tráfico Urbano</span>
+                        <span id="trafficValue" class="font-mono text-emerald-400 font-bold">18.500 UEs</span>
+                    </div>
+                    <input type="range" id="trafficSlider" min="5000" max="25000" step="1000" value="18500" oninput="onTrafficChange(this.value)"
+                           class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                </div>
+            </div>
+
+            <!-- Legend Card -->
+            <div class="glass-panel rounded-2xl p-4 space-y-3">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2">
+                    Leyenda Topológica 3GPP
+                </h3>
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-rose-500/40 border border-rose-500 rounded"></span>
+                        <span class="text-slate-300">Cobertura Paraguas Macro ($R \approx 1,5 \text{ km}$)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-emerald-500/40 border border-emerald-500 rounded"></span>
+                        <span class="text-slate-300">Small Cell mmWave ($R \approx 250 \text{ m}$)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-0.5 bg-cyan-400 border border-cyan-400"></span>
+                        <span class="text-slate-300">Haces Beamforming Activos</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Canvas Interactive Map Area -->
+        <section class="lg:col-span-6 relative flex flex-col items-center justify-center glass-panel rounded-2xl p-2 min-h-[550px]">
+            <canvas id="cityMap" width="800" height="700" class="w-full h-full object-contain rounded-xl cursor-crosshair"></canvas>
+            
+            <!-- Canvas Overlay Badge -->
+            <div class="absolute top-4 left-4 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-location-crosshairs text-emerald-400"></i>
+                <span>Haz clic en cualquier estación para ver su Telemetría y Hoja Técnica</span>
+            </div>
+
+            <!-- Map Controls -->
+            <div class="absolute bottom-4 right-4 flex gap-2">
+                <button onclick="resetZoom()" class="p-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-arrows-to-dot"></i> Centrar Mapa
+                </button>
+            </div>
+        </section>
+
+        <!-- Station Inspector & Specs Drawer -->
+        <aside class="lg:col-span-3 space-y-4">
+            <div class="glass-panel rounded-2xl p-4 space-y-4 h-full flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <i class="fa-solid fa-circle-info text-cyan-400"></i> Inspección de Estación Base
+                    </h2>
+
+                    <div id="inspectorContent" class="mt-4 space-y-4">
+                        <!-- Dynamic details populated by JS -->
+                        <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-center text-slate-400 text-xs py-8 space-y-2">
+                            <i class="fa-solid fa-arrow-pointer text-2xl text-slate-600 animate-bounce"></i>
+                            <p>Haz clic sobre una antena <strong class="text-rose-400">Macrocelda</strong> o <strong class="text-emerald-400">Small Cell</strong> en el mapa para inspeccionar sus parámetros en tiempo real.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Specs Footer -->
+                <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-400 space-y-1 font-mono">
+                    <div class="flex justify-between">
+                        <span>Frecuencia Macro:</span>
+                        <span class="text-slate-200">700MHz / 3.5GHz (Sub-6)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Frecuencia Small:</span>
+                        <span class="text-slate-200">28 GHz (n257 mmWave)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Modelo Propagación:</span>
+                        <span class="text-slate-200">3GPP TR 38.901 UMa</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Arquitectura Core:</span>
+                        <span class="text-emerald-400">5G SA (Option 2)</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Script Logic -->
+    <script>
+        const canvas = document.getElementById('cityMap');
+        const ctx = canvas.getContext('2d');
+
+        // State variables
+        let selectedSite = null;
+        let showMacro = true;
+        let showSmall = true;
+        let showBeams = true;
+        let showIot = true;
+        let currentSlice = 'all';
+        let activeUsersCount = 18500;
+        let animationFrameId = null;
+        let pulseTick = 0;
+
+        // 5G Cell Stations Definition according to Smart City Topology
+        const sites = [
+            // Macrocells (Outer & Perimeter Umbrella)
+            { id: 'M1', name: 'gNodeB Macro Norte (Cerro Alto)', type: 'macro', x: 400, y: 110, band: 'Sub-6GHz (n28 / 700 MHz)', eirp: '62 dBm', radius: 210, azimuths: [0, 120, 240], activeUsers: 3400, height: '45m', slice: 'embb' },
+            { id: 'M2', name: 'gNodeB Macro Sur (Polígono Ind.)', type: 'macro', x: 400, y: 590, band: 'Sub-6GHz (n78 / 3.5 GHz)', eirp: '58 dBm', radius: 190, azimuths: [30, 150, 270], activeUsers: 4100, height: '35m', slice: 'mmtc' },
+            { id: 'M3', name: 'gNodeB Macro Este (Zona Residencial)', type: 'macro', x: 670, y: 350, band: 'Sub-6GHz (n78 / 3.5 GHz)', eirp: '58 dBm', radius: 185, azimuths: [60, 180, 300], activeUsers: 2800, height: '32m', slice: 'embb' },
+            { id: 'M4', name: 'gNodeB Macro Oeste (Autopista/Entrada)', type: 'macro', x: 130, y: 350, band: 'Sub-6GHz (n28 / 700 MHz)', eirp: '60 dBm', radius: 200, azimuths: [0, 120, 240], activeUsers: 3900, height: '40m', slice: 'urllc' },
+            { id: 'M5', name: 'gNodeB Macro Centro (Torre Telecom)', type: 'macro', x: 400, y: 350, band: 'Sub-6GHz (n78 / 3.5 GHz)', eirp: '55 dBm', radius: 150, azimuths: [45, 165, 285], activeUsers: 4300, height: '30m', slice: 'embb' },
+
+            // Small Cells mmWave (Downtown & High-Density Core)
+            { id: 'S01', name: 'Small Cell 01 (Plaza Bolivar / Centro)', type: 'small', x: 350, y: 310, band: 'mmWave (n257 / 28 GHz)', eirp: '38 dBm', radius: 65, height: '8m', slice: 'embb', location: 'Poste Inteligente #12' },
+            { id: 'S02', name: 'Small Cell 02 (Alcaldía & Gobierno)', type: 'small', x: 450, y: 310, band: 'mmWave (n257 / 28 GHz)', eirp: '38 dBm', radius: 60, height: '9m', slice: 'urllc', location: 'Fachada Edificio Central' },
+            { id: 'S03', name: 'Small Cell 03 (Zona Comercial / Bulevar)', type: 'small', x: 400, y: 270, band: 'mmWave (n257 / 28 GHz)', eirp: '40 dBm', radius: 70, height: '7m', slice: 'embb', location: 'Luminaria Bulevar Norte' },
+            { id: 'S04', name: 'Small Cell 04 (Estación Central Bus/Metro)', type: 'small', x: 400, y: 430, band: 'mmWave (n257 / 28 GHz)', eirp: '40 dBm', radius: 75, height: '10m', slice: 'urllc', location: 'Marquesina Terminal' },
+            { id: 'S05', name: 'Small Cell 05 (Hospital General)', type: 'small', x: 280, y: 380, band: 'mmWave (n257 / 28 GHz)', eirp: '36 dBm', radius: 55, height: '8m', slice: 'urllc', location: 'Techo Emergencias' },
+            { id: 'S06', name: 'Small Cell 06 (Centro Financiero)', type: 'small', x: 520, y: 380, band: 'mmWave (n257 / 28 GHz)', eirp: '38 dBm', radius: 65, height: '12m', slice: 'embb', location: 'Torre Empresarial 3' },
+            { id: 'S07', name: 'Small Cell 07 (Cruce Vehicular Semáforo)', type: 'small', x: 330, y: 240, band: 'mmWave (n257 / 28 GHz)', eirp: '35 dBm', radius: 50, height: '6m', slice: 'urllc', location: 'Semáforo Inteligente N' },
+            { id: 'S08', name: 'Small Cell 08 (Parque Tecnológico)', type: 'small', x: 470, y: 240, band: 'mmWave (n257 / 28 GHz)', eirp: '37 dBm', radius: 60, height: '7m', slice: 'mmtc', location: 'Poste Sensor Ambiental' },
+            { id: 'S09', name: 'Small Cell 09 (Universidad / Campus)', type: 'small', x: 260, y: 270, band: 'mmWave (n257 / 28 GHz)', eirp: '39 dBm', radius: 70, height: '9m', slice: 'embb', location: 'Biblioteca Campus' },
+            { id: 'S10', name: 'Small Cell 10 (Zona Hotelera)', type: 'small', x: 540, y: 270, band: 'mmWave (n257 / 28 GHz)', eirp: '36 dBm', radius: 55, height: '8m', slice: 'embb', location: 'Poste Alumbrado Este' },
+            { id: 'S11', name: 'Small Cell 11 (Centro Deportivo)', type: 'small', x: 310, y: 460, band: 'mmWave (n257 / 28 GHz)', eirp: '38 dBm', radius: 65, height: '11m', slice: 'embb', location: 'Torre Iluminación Estadio' },
+            { id: 'S12', name: 'Small Cell 12 (Mercado / Comercio)', type: 'small', x: 490, y: 460, band: 'mmWave (n257 / 28 GHz)', eirp: '37 dBm', radius: 60, height: '8m', slice: 'mmtc', location: 'Poste Peatonal Sur' }
+        ];
+
+        // Mobile & IoT Devices for Beamforming visual
+        const devices = [
+            { x: 360, y: 290, type: 'bus', label: 'Bus Autónomo V2X', slice: 'urllc', targetSite: 'S01' },
+            { x: 430, y: 320, type: 'car', label: 'Vehículo Conectado', slice: 'urllc', targetSite: 'S02' },
+            { x: 410, y: 260, type: 'user', label: 'Smartphone 8K Stream', slice: 'embb', targetSite: 'S03' },
+            { x: 390, y: 440, type: 'bus', label: 'Ambulancia Telemedicina', slice: 'urllc', targetSite: 'S04' },
+            { x: 290, y: 360, type: 'sensor', label: 'Sensor Sanitario Hospital', slice: 'urllc', targetSite: 'S05' },
+            { x: 500, y: 360, type: 'user', label: 'FWA Router 5G', slice: 'embb', targetSite: 'S06' },
+            { x: 480, y: 230, type: 'sensor', label: 'Contador Eléctrico Smart', slice: 'mmtc', targetSite: 'S08' },
+            { x: 270, y: 250, type: 'user', label: 'Laptop Campus HD', slice: 'embb', targetSite: 'S09' }
+        ];
+
+        // Canvas Rendering Cycle
+        function render() {
+            pulseTick += 0.03;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawCityGrid();
+            
+            if (showMacro) drawHexGrid();
+            if (showMacro) drawMacroCells();
+            if (showSmall) drawSmallCells();
+            if (showBeams) drawBeamforming();
+            if (showIot) drawDevices();
+
+            drawSelectedHighlight();
+
+            animationFrameId = requestAnimationFrame(render);
+        }
+
+        // Draw Stylized City Background
+        function drawCityGrid() {
+            // Background fill
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Urban Blocks / Roads
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+
+            // Concentric District Rings
+            ctx.beginPath();
+            ctx.arc(400, 350, 140, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+            ctx.fill();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Main Avenues
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 12;
+            ctx.beginPath();
+            ctx.moveTo(400, 50); ctx.lineTo(400, 650);
+            ctx.moveTo(50, 350); ctx.lineTo(750, 350);
+            ctx.stroke();
+
+            // Avenue Axis Lines
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(400, 50); ctx.lineTo(400, 650);
+            ctx.moveTo(50, 350); ctx.lineTo(750, 350);
+            ctx.stroke();
+
+            // City Zone Labels
+            ctx.fillStyle = '#475569';
+            ctx.font = '10px JetBrains Mono';
+            ctx.fillText('ZONA NORTE (SUBURBANA)', 320, 40);
+            ctx.fillText('ZONA SUR (INDUSTRIAL)', 320, 680);
+            ctx.fillText('DOWNTOWN / DENSE CORE (mmWave)', 300, 350);
+        }
+
+        // Draw Macrocell Hexagonal Footprints
+        function drawHexGrid() {
+            sites.filter(s => s.type === 'macro').forEach(s => {
+                if (currentSlice !== 'all' && s.slice !== currentSlice) return;
+
+                ctx.save();
+                ctx.beginPath();
+                const radius = s.radius;
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const hx = s.x + radius * Math.cos(angle);
+                    const hy = s.y + radius * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(hx, hy);
+                    else ctx.lineTo(hx, hy);
+                }
+                ctx.closePath();
+
+                // Gradient / Fill
+                ctx.fillStyle = 'rgba(244, 63, 94, 0.04)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.3)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([6, 3]);
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        // Draw Macro Towers (gNodeB Sub-6GHz)
+        function drawMacroCells() {
+            sites.filter(s => s.type === 'macro').forEach(s => {
+                if (currentSlice !== 'all' && s.slice !== currentSlice) return;
+
+                // Outer Pulse Ring
+                const pulse = (Math.sin(pulseTick + s.x) + 1) * 6;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 14 + pulse, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
+                ctx.fill();
+
+                // Antenna Base Marker
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = '#f43f5e';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Tower Icon Representation
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '9px FontAwesome';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('\uf519', s.x, s.y);
+
+                // Label
+                ctx.fillStyle = '#fda4af';
+                ctx.font = '10px Inter';
+                ctx.fillText(s.id, s.x, s.y - 16);
+            });
+        }
+
+        // Draw Small Cells (gNodeB mmWave 28GHz)
+        function drawSmallCells() {
+            sites.filter(s => s.type === 'small').forEach(s => {
+                if (currentSlice !== 'all' && s.slice !== currentSlice) return;
+
+                // Coverage Micro Circle
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Node Center
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = '#6ee7b7';
+                ctx.font = '9px Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText(s.id, s.x, s.y - 9);
+            });
+        }
+
+        // Draw Directional Beamforming Beams
+        function drawBeamforming() {
+            devices.forEach(dev => {
+                if (currentSlice !== 'all' && dev.slice !== currentSlice) return;
+
+                const target = sites.find(s => s.id === dev.targetSite);
+                if (!target) return;
+
+                const angle = Math.atan2(dev.y - target.y, dev.x - target.x);
+                const dist = Math.hypot(dev.x - target.x, dev.y - target.y);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(target.x, target.y);
+                ctx.arc(target.x, target.y, dist, angle - 0.12, angle + 0.12);
+                ctx.closePath();
+
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.18)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        // Draw User Devices and IoT Nodes
+        function drawDevices() {
+            devices.forEach(dev => {
+                if (currentSlice !== 'all' && dev.slice !== currentSlice) return;
+
+                ctx.beginPath();
+                ctx.arc(dev.x, dev.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = dev.slice === 'urllc' ? '#f59e0b' : dev.slice === 'embb' ? '#38bdf8' : '#a855f7';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '8px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(dev.label, dev.x, dev.y + 11);
+            });
+        }
+
+        // Highlight Selected Antenna Site
+        function drawSelectedHighlight() {
+            if (!selectedSite) return;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(selectedSite.x, selectedSite.y, 20 + Math.sin(pulseTick * 2) * 3, 0, Math.PI * 2);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Handle Map Click Selection
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clickX = (e.clientX - rect.left) * scaleX;
+            const clickY = (e.clientY - rect.top) * scaleY;
+
+            // Find closest site within threshold
+            let found = null;
+            let minDist = 25;
+
+            sites.forEach(site => {
+                const dist = Math.hypot(site.x - clickX, site.y - clickY);
+                if (dist < minDist) {
+                    minDist = dist;
+                    found = site;
+                }
+            });
+
+            selectedSite = found;
+            updateInspector();
+        });
+
+        // Update Technical Inspector Sidebar
+        function updateInspector() {
+            const container = document.getElementById('inspectorContent');
+
+            if (!selectedSite) {
+                container.innerHTML = `
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800 text-center text-slate-400 text-xs py-8 space-y-2">
+                        <i class="fa-solid fa-arrow-pointer text-2xl text-slate-600 animate-bounce"></i>
+                        <p>Haz clic sobre una antena <strong class="text-rose-400">Macrocelda</strong> o <strong class="text-emerald-400">Small Cell</strong> para ver su telemetría.</p>
+                    </div>`;
+                return;
+            }
+
+            const isMacro = selectedSite.type === 'macro';
+            const typeBadge = isMacro 
+                ? `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded-full font-mono">Macrocelda Sub-6GHz</span>`
+                : `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] px-2 py-0.5 rounded-full font-mono">Small Cell mmWave</span>`;
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-800 pb-2">
+                        <div>
+                            <h3 class="font-bold text-slate-100 text-sm">${selectedSite.name}</h3>
+                            <p class="text-xs text-slate-400 font-mono">ID Sitio: ${selectedSite.id}</p>
+                        </div>
+                        ${typeBadge}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 block text-[10px]">Frecuencia Operativa:</span>
+                            <span class="text-slate-200 font-bold">${selectedSite.band}</span>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 block text-[10px]">Potencia EIRP:</span>
+                            <span class="text-amber-400 font-bold">${selectedSite.eirp}</span>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 block text-[10px]">Radio Cobertura ($R$):</span>
+                            <span class="text-cyan-400 font-bold">${isMacro ? '1.5 - 2.0 km' : '200 - 300 m'}</span>
+                        </div>
+                        <div class="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 block text-[10px]">Altura Antena:</span>
+                            <span class="text-slate-200 font-bold">${selectedSite.height}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2 text-xs">
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>Sustento Normativo 3GPP:</span>
+                            <span class="text-emerald-400 font-mono font-bold">${isMacro ? 'TS 38.104 (Sub-6)' : 'TS 38.104 (FR2)'}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>Network Slice Asignado:</span>
+                            <span class="text-amber-300 font-mono font-bold uppercase">${selectedSite.slice}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>Ubicación Físico-Urbana:</span>
+                            <span class="text-slate-400 text-[11px]">${selectedSite.location || 'Torre Dedicada Perimetral'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggles & Controls
+        function toggleLayer(layer) {
+            if (layer === 'macro') {
+                showMacro = !showMacro;
+                document.getElementById('chkMacro').checked = showMacro;
+            } else if (layer === 'small') {
+                showSmall = !showSmall;
+                document.getElementById('chkSmall').checked = showSmall;
+            } else if (layer === 'beams') {
+                showBeams = !showBeams;
+                document.getElementById('chkBeams').checked = showBeams;
+            } else if (layer === 'iot') {
+                showIot = !showIot;
+                document.getElementById('chkIot').checked = showIot;
+            }
+        }
+
+        function updateFilter() {
+            currentSlice = document.getElementById('sliceFilter').value;
+        }
+
+        function onTrafficChange(val) {
+            activeUsersCount = parseInt(val);
+            document.getElementById('trafficValue').textContent = `${activeUsersCount.toLocaleString('es-CO')} UEs`;
+        }
+
+        function resetZoom() {
+            selectedSite = null;
+            updateInspector();
+        }
+
+        // Initialize Render Loop
+        render();
+    </script>
+</body>
+</html>
